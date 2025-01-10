@@ -1,0 +1,47 @@
+import pandas as pd
+import os
+import glob
+import json
+import numpy as np
+
+# Base directory
+#base_dir = '/Volumes/WD/ladder/500mV_100bp_1ngmkl_10MHz_boost_240830164444/'
+#base_dir = '/Volumes/WD/ladder/500mV_500bp_1ngmkl_20MHz_boost_240830171659/'
+#base_dir = '/Volumes/WD/ladder/500mV_200bp_1ngmkl_10MHz_boost_240830165006/'
+#base_dir = '/Volumes/WD/NBX/Raw_data_20241125_WSU_6_b1_171/sample2_spikein_241125191717/'
+base_dir = '/Volumes/WD/NBX/Raw_data_20241125_WSU_6_b1_171/sample2_spikein_5mhz_241125192921/'
+
+# List to store all peaks data
+all_peaks = []
+
+# Helper function to convert numpy arrays to lists for JSON serialization
+def numpy_to_list(obj):
+    if isinstance(obj, np.ndarray):
+        return obj.tolist()
+    return obj
+
+# Walk through all subdirectories
+for root, dirs, files in os.walk(base_dir):
+    if 'peaks_data.json' in files:
+        # Read the JSON file
+        with open(os.path.join(root, 'peaks_data.json'), 'r') as f:
+            peaks_data = json.load(f)
+        
+        # Add source file information if not already present
+        for peak in peaks_data:
+            if 'source_file' not in peak:
+                peak['source_file'] = os.path.basename(root)
+        
+        # Append to our list
+        all_peaks.extend(peaks_data)
+        print(f"Processed: {os.path.basename(root)}")
+
+# Save combined data as JSON
+if all_peaks:
+    output_file = os.path.join(base_dir, 'combined_peaks_data.json')
+    with open(output_file, 'w') as f:
+        json.dump(all_peaks, f, indent=2)
+    print(f"\nCombined data saved to: {output_file}")
+    print(f"Total peaks found: {len(all_peaks)}")
+else:
+    print("No peaks_data.json files found!")
