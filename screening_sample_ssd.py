@@ -55,6 +55,44 @@ def ensure_dir(directory):
     if not os.path.exists(directory):
         os.makedirs(directory)
 
+def find_sudden_changes(signal, threshold=0.1, min_segment_length=1000):
+    """Find indices where sudden changes occur in the signal.
+    Returns segment boundaries including start and end of signal."""
+    # Calculate normalized gradient
+    grad = np.gradient(signal)
+    grad_norm = grad / np.max(np.abs(grad))
+    
+    # Find significant changes
+    change_points = np.where(np.abs(grad_norm) > threshold)[0]
+    
+    # Add start and end points
+    all_points = np.concatenate(([0], change_points, [len(signal)-1]))
+    
+    # Filter out segments that are too short
+    segments = []
+    for i in range(len(all_points)-1):
+        if all_points[i+1] - all_points[i] >= min_segment_length:
+            segments.append((all_points[i], all_points[i+1]))
+    
+    return segments
+
+# Add this function before the main processing loop
+def get_data_folders(root_path):
+    """
+    Find all relevant data folders in the given root path.
+    Excludes folders containing 'baseline' in their name.
+    """
+    folders = []
+    for item in os.listdir(root_path):
+        full_path = os.path.join(root_path, item)
+        #if os.path.isdir(full_path) and '3MLiCl' in item and 'baseline' not in item:
+        #if os.path.isdir(full_path) and '100pM' in item and 'baseline' not in item:
+        #if os.path.isdir(full_path) and '2023' in item and 'baseline' not in item:
+        #if os.path.isdir(full_path) and '500bp' in item and 'baseline' not in item:
+        if os.path.isdir(full_path) and '109_1MKCl_500mV_sample2_100xdilution_10MHz_250429142949' in item:
+            folders.append(full_path)
+    return sorted(folders)
+
 #%% Main processing loop
 window_size = 500
 signals = {}
@@ -67,62 +105,23 @@ i_grad_sig = {}
 norm_signals = {}
 n_func = {}
 base_line = {}
-#data_path = '/Volumes/WD/NBX/Raw_data_20241125_WSU_6_b1_171/sample2_spikein_241125191717/'
-data_path = '/Volumes/WD/NBX/Raw_data_20241125_WSU_6_b1_171/sample2_spikein_5mhz_241125192921/'
-#data_path = '/Volumes/WD/ladder/500mV_200bp_1ngmkl_10MHz_boost_240830165006/'
-#data_path = '/Volumes/WD/ladder/500mV_500bp_1ngmkl_20MHz_boost_240830171659/'
-#data_path = '/Volumes/WD/ladder/500mV_500bp_1ngmkl_10MHz_boost_240830171035/'
-#data_path = '/Volumes/WD/ladder/500mV_100bp_1ngmkl_20MHz_boost_240830164159/'
-#data_path = '/Volumes/WD/ladder/500mV_100bp_1ngmkl_10MHz_boost_240830164444/'
-n_signal = 0
-for file in glob.glob(data_path+'*CH001_0[5][4-9].abf'):
-    # Create output directories
-    base_filename = os.path.splitext(os.path.basename(file))[0]
-    output_dir = os.path.join(os.path.dirname(file), base_filename)
-    figures_dir = os.path.join(output_dir, 'figures')
-    ensure_dir(output_dir)
-    ensure_dir(figures_dir)
-    
-    try:
-        df = pyabf.ABF(file)
-    except:
-        continue
-    df.setSweep(0)
-    I = np.array(df.sweepY)
-    t = np.array(df.sweepX)
-    order = 6
-    fs = 1/abs(t[1]-t[0])       # sample rate, Hz
-    cutoff = 5*1e5  
 
-    median = np.median(I)
-    I_norm = butter_lowpass_filter(I, 1e4, fs, 4) # baseline normalization. 10kHz cutoff, 4th 
-    I_filtered = butter_lowpass_filter(1-I/I_norm, cutoff, fs, order)
-    I_smooth = SmoothenTransmission(1-I/I_norm, 40,polyorder=2)
-    order = 6
-    fs = 1/abs(t[1]-t[0])       # sample rate, Hz
-    cutoff = 5*1e5  
-    I_filtered = butter_lowpass_filter(1-I/I_norm, cutoff, fs, order)
-    #I_filtered = butter_lowpass_filter(I_smooth, cutoff, fs, order)
-    median = np.median(I)
 
-    variation = np.std(I_norm)/np.median(I_norm)
+#root_path = '/Volumes/Nanopore/DATA/NewBioSample6/' 
+#root_path = '/Volumes/Nanopore/DATA/Database100-200-500/'
+root_path = '/Volumes/Nanopore/DATA/plasmid/'
+data_folders = get_data_folders(root_path)
+print(data_folders)
+for data_path in data_folders:
+    print(f"Processing folder: {data_path}")
+   
+    n_signal = 0
+    for file in glob.glob(os.path.join(data_path, '*CH001_[0-9][0-9][0-9].abf')):
+        print('Processing file:', file)
 
-    if variation > 5e-3:
-        fig, ax = plt.subplots(1, 1, figsize=(10,10), dpi=200)
-        ax.plot(t[::1000],I[::1000],c='blue') 
-        ax.plot(t[::1000],I_norm[::1000],c='orange')
-        ax.set_title('Baseline variation:' + str(np.round(variation,4)))
-
-        plt.savefig(os.path.join(output_dir, f'background.png'))
-        plt.close()
-        print(f'Processed {base_filename}: baseline variation {variation}')
-
-        continue
-    peak_args = find_peaks(I_filtered, prominence=0.5,distance = 1000)[0]
-    n_signal+=len(peak_args)
-    
-    if len(peak_args) >0 :
-        peak_data = []  # Initialize the list here
+        # Reset peak_data for each new file
+        
+        peak_data = []
         signals[file] = {}
         signals_but[file] = {}
         raw_signals[file] = {}
@@ -134,64 +133,132 @@ for file in glob.glob(data_path+'*CH001_0[5][4-9].abf'):
         n_func[file] = {}
         base_line[file] = {}
         
-        for jj in range(0,len(peak_args)):
-            
-            base_line[file][jj] = np.median(I_norm[peak_args[jj]-window_size:peak_args[jj]+window_size])/median
-            norm_signals[file][jj] = I_norm[peak_args[jj]-window_size:peak_args[jj]+window_size]/median
-            signals[file][jj] = I_smooth[peak_args[jj]-window_size:peak_args[jj]+window_size]
-            signals_but[file][jj] = I_filtered[peak_args[jj]-window_size:peak_args[jj]+window_size]
-            
-            raw_signal_not_norm[file][jj] = I[peak_args[jj]-window_size:peak_args[jj]+window_size]
-            raw_signals[file][jj] = I[peak_args[jj]-window_size:peak_args[jj]+window_size]/I_norm[peak_args[jj]-window_size:peak_args[jj]+window_size]
-            t_signal[file][jj] = t[peak_args[jj]-window_size:peak_args[jj]+window_size]*1e6-t[peak_args[jj]]*1e6
-            i_grad[file][jj] = np.gradient(signals_but[file][jj])
-            i_grad_sig[file][jj] = (i_grad[file][jj])*np.abs(signals_but[file][jj])#**2
-            i_grad_sig[file][jj][i_grad_sig[file][jj]>0] = abs(i_grad_sig[file][jj][i_grad_sig[file][jj]>0])**0.7
-            i_grad_sig[file][jj][i_grad_sig[file][jj]<0] = -abs(i_grad_sig[file][jj][i_grad_sig[file][jj]<0])**0.7
-            i_grad_sig[file][jj]/=np.max(i_grad_sig[file][jj])
-            peak_args_grad = find_peaks(i_grad_sig[file][jj], prominence=0.1, height=0.23)[0]
-            n_func[file][jj] = len(peak_args_grad)    
-            
-            # Store peak data in a dictionary
-            peak_dict = {
-                'peak_index': jj,
-                'time': t_signal[file][jj].tolist(),
-                'raw_signal': raw_signals[file][jj].tolist(),
-                'raw_signal_not_norm': raw_signal_not_norm[file][jj].tolist(),
-                'norm_signal': norm_signals[file][jj].tolist(),
-                'filtered_signal': signals_but[file][jj].tolist(),
-                'gradient': i_grad_sig[file][jj].tolist(),
-                'baseline': float(base_line[file][jj]),
-                'n_gradient_peaks': int(len(peak_args_grad))
-            }
-            peak_data.append(peak_dict)
-            
-            # Create and save figure
-            fig, ax = plt.subplots(2, 1, figsize=(10,10), dpi=200)
-            ax[0].plot(t_signal[file][jj],np.median(raw_signals[file][jj])-raw_signals[file][jj],alpha=0.3,label='Raw signal')
-            
-            ax[0].plot(t_signal[file][jj],np.median(norm_signals[file][jj])-norm_signals[file][jj],alpha=0.5,label='Normalization signal')
-            
-            #ax[0].plot(t_signal[file][jj],signals[file][jj],c='r',label='Savgol filtered')
-            
-            ax[0].plot(t_signal[file][jj],signals_but[file][jj],c='k',label='LP filter, 0.1 MHz')
-            
-            
-            ax[1].plot(t_signal[file][jj],i_grad_sig[file][jj],label='Gradient (LP)')
-            peak_args_grad = find_peaks(i_grad_sig[file][jj], prominence=0.1, height=0.23)[0]
-            ax[1].scatter(t_signal[file][jj][peak_args_grad],i_grad_sig[file][jj][peak_args_grad],label='Gradient (LP)')
-            
-            ax[0].set_ylabel(r'$I$, arb. units')
-            ax[1].set_ylabel(R'$dI/dt$, arb. units')
-            ax[1].set_xlabel(R'$t$, $\mu$s')
-            norm_signals[jj] = I_norm[peak_args[jj]-window_size:peak_args[jj]+window_size]/median
-            
-            fig.suptitle(f'Peak {jj}')
-            plt.savefig(os.path.join(figures_dir, f'peak_{jj}.png'))
-            plt.close()
+        # Create output directories
+        base_filename = os.path.splitext(os.path.basename(file))[0]
+        output_dir = os.path.join(os.path.dirname(file), base_filename)
+        figures_dir = os.path.join(output_dir, 'figures')
+        ensure_dir(output_dir)
+        ensure_dir(figures_dir)
         
-        # Save peaks data to JSON instead of CSV
+        try:
+            df = pyabf.ABF(file)
+        except:
+            continue
+        df.setSweep(0)
+        I = np.array(df.sweepY)
+        t = np.array(df.sweepX)
+        order = 6
+        fs = 1/abs(t[1]-t[0])       # sample rate, Hz
+        cutoff = 5*1e5  
+
+        median = np.median(I)
+        I_norm = butter_lowpass_filter(I, 1e3, fs, 4)
+        
+        # Find segments between sudden changes
+        segments = find_sudden_changes(I_norm, threshold=0.3, min_segment_length=50000)
+        variation = np.std(I_norm)/np.median(I_norm)
+        fig, ax = plt.subplots(1, 1, figsize=(10,10), dpi=200)
+        ax.plot(t[::1000],I[::1000],c='blue') 
+        ax.plot(t[::1000],I_norm[::1000],c='orange')
+        ax.set_title('Baseline variation:' + str(np.round(variation,4)))
+
+        plt.savefig(os.path.join(output_dir, f'background.png'))
+        plt.close()
+        
+        global_peak_counter = 0  # Add this counter to track total peaks across segments
+        print('Number of segments:', len(segments))
+        for seg_start, seg_end in segments:
+            # Analyze each segment independently
+            I_segment = I[seg_start:seg_end]
+            I_norm_segment = I_norm[seg_start:seg_end]
+            t_segment = t[seg_start:seg_end]
+            
+            # Calculate local variation
+            variation = np.std(I_norm_segment)/np.median(I_norm_segment)
+            #print(variation)
+            
+            if variation <= 5e-3:  # Process segments with acceptable variation
+                I_filtered_segment = butter_lowpass_filter(1-I_segment/I_norm_segment, cutoff, fs, order)
+                peak_args = find_peaks(I_filtered_segment, prominence=0.2, distance=1000)[0]
+                
+                # Adjust peak indices to global coordinates
+                peak_args = peak_args + seg_start
+                
+                if len(peak_args) > 0:
+                    # Process peaks using global_peak_counter instead of jj
+                    for local_idx in range(len(peak_args)):
+                        try:
+                            # Use global_peak_counter for dictionary indexing
+                            peak_idx = global_peak_counter + local_idx
+                            
+                            # Make sure to check array bounds when using window_size
+                            start_idx = max(peak_args[local_idx]-window_size, 0)
+                            end_idx = min(peak_args[local_idx]+window_size, len(I))
+                            
+                            # Calculate SNR for this slice
+                            slice_signal = I_filtered_segment[start_idx-seg_start:end_idx-seg_start]
+                            peak_amplitude = np.max(np.abs(slice_signal))
+                            noise_level = np.std(slice_signal)  # Using standard deviation as noise measure
+                            snr_db = 10 * np.log10(peak_amplitude / noise_level)
+                            
+                            # Only process peaks with SNR > 2 dB
+                            if 1:
+                                # Update all dictionary references to use peak_idx instead of jj
+                                base_line[file][peak_idx] = np.median(I_norm[start_idx:end_idx])/median
+                                norm_signals[file][peak_idx] = I_norm[start_idx:end_idx]/median
+                                signals[file][peak_idx] = I_filtered_segment[start_idx-seg_start:end_idx-seg_start]
+                                signals_but[file][peak_idx] = I_filtered_segment[start_idx-seg_start:end_idx-seg_start]
+                                
+                                raw_signal_not_norm[file][peak_idx] = I[start_idx:end_idx]
+                                raw_signals[file][peak_idx] = I[start_idx:end_idx]/I_norm[start_idx:end_idx]
+                                t_signal[file][peak_idx] = t[start_idx:end_idx]*1e6-t[peak_args[local_idx]]*1e6
+                                
+                                # Convert NumPy types to native Python types
+                                peak_dict = {
+                                    'peak_index': int(peak_idx),
+                                    'segment_index': int(local_idx),
+                                    'segment_start': int(seg_start),
+                                    'segment_end': int(seg_end),
+                                    't_start': float(t_signal[file][peak_idx][0]),
+                                    't_end': float(t_signal[file][peak_idx][-1]),
+                                    'dt': float(t_signal[file][peak_idx][1] - t_signal[file][peak_idx][0]),
+                                    'raw_signal': [float(x) for x in raw_signals[file][peak_idx].tolist()],
+                                    'raw_signal_not_norm': [float(x) for x in raw_signal_not_norm[file][peak_idx].tolist()],
+                                    'norm_signal': [float(x) for x in norm_signals[file][peak_idx].tolist()],
+                                    'filtered_signal': [float(x) for x in signals_but[file][peak_idx].tolist()],
+                                    'baseline': float(base_line[file][peak_idx]),
+                                    'snr_db': float(snr_db)  # Add SNR to the output
+                                }
+                                peak_data.append(peak_dict)
+                                peak_dict={}
+                                
+                                # Update figure title to show global peak index and SNR
+                                fig, ax = plt.subplots(1, 1, figsize=(6,6), dpi=200)
+                                ax.plot(t_signal[file][peak_idx], signals_but[file][peak_idx], c='blue')
+                                ax.plot(t_signal[file][peak_idx], raw_signals[file][peak_idx], c='orange')
+                                ax.set_title(f'Peak {peak_idx} (Segment Peak {local_idx}, SNR: {snr_db:.1f} dB)')
+                                plt.savefig(os.path.join(figures_dir, f'peak_{peak_idx}.png'))
+                                plt.close()
+                                
+                                # Increment global peak counter only for accepted peaks
+                                global_peak_counter += 1
+                            
+                        except Exception as e:
+                            print(f"Error processing peak {peak_idx} in file {file}: {str(e)}")
+                            continue
+                    
+                    print(f'Processed {base_filename}: found {global_peak_counter} peaks with SNR > 2 dB in segment')
+            else:
+                fig, ax = plt.subplots(1, 1, figsize=(10,10), dpi=200)
+                ax.plot(t_segment[::100], I_segment[::100], c='blue')
+                ax.plot(t_segment[::100], I_norm_segment[::100], c='orange')
+                ax.set_title(f'Segment variation: {np.round(variation,4)}')
+                plt.savefig(os.path.join(output_dir, f'segment_{seg_start}_{seg_end}.png'))
+                plt.close()
+            # Save peaks data to JSON instead of CSV
         with open(os.path.join(output_dir, 'peaks_data.json'), 'w') as f:
             json.dump(peak_data, f, indent=2)
+        
+        
     
-    print(f'Processed {base_filename}: found {len(peak_args)} peaks')
+    

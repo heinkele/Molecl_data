@@ -9,8 +9,18 @@ import numpy as np
 #base_dir = '/Volumes/WD/ladder/500mV_500bp_1ngmkl_20MHz_boost_240830171659/'
 #base_dir = '/Volumes/WD/ladder/500mV_200bp_1ngmkl_10MHz_boost_240830165006/'
 #base_dir = '/Volumes/WD/NBX/Raw_data_20241125_WSU_6_b1_171/sample2_spikein_241125191717/'
-base_dir = '/Volumes/WD/NBX/Raw_data_20241125_WSU_6_b1_171/sample2_spikein_5mhz_241125192921/'
-
+#base_dir = '/Volumes/WD/NBX/Raw_data_20241125_WSU_6_b1_171/sample2_spikein_5mhz_241125192921/'
+#base_dir = '/Volumes/Nanopore/DATA/NewBioSample4/160_3MLiCl_1MHz_300mV_300pM_sample4_250113155944/' 
+#base_dir = '/Volumes/Nanopore/DATA/Database100-200-500/500mV_100bp_1ngmkl_10MHz_boost_240830164444/'
+#base_dir = '/Volumes/Nanopore/DATA/Database100-200-500/500mV_100bp_1ngmkl_20MHz_boost_240830164159/'
+#base_dir = '/Volumes/Nanopore/DATA/Database100-200-500/500mV_200bp_1ngmkl_10MHz_boost_240830165006/'
+#base_dir = '/Volumes/Nanopore/DATA/Database100-200-500/500mV_500bp_1ngmkl_10MHz_boost_240830171035/'
+#base_dir = '/Volumes/Nanopore/DATA/Database100-200-500/500mV_500bp_1ngmkl_20MHz_boost_240830171659/'
+#base_dir = '/Volumes/Nanopore/DATA/NewBioSample4/160_3MLiCl_1MHz_300mV_300pM_sample4_250113155944/'
+#base_dir = '/Volumes/Nanopore/DATA/NewBioSample4/160_3MLiCl_1MHz_300mV_300pM_sample4_250113160623/'
+#base_dir = '/Volumes/Nanopore/DATA/NewBioSample4/160_3MLiCl_1MHz_300mV_300pM_sample4_250113161058/'
+#base_dir = '/Volumes/Nanopore/DATA/NewBioSample4/160_3MLiCl_1MHz_300mV_baseline_250113153808/'
+base_dir = '/Volumes/Nanopore/DATA/NewBioSample4/160_3MLiCl_1MHz_500mV_300pM_sample4_250113161718/'
 # List to store all peaks data
 all_peaks = []
 
