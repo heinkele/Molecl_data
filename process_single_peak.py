@@ -86,7 +86,7 @@ def process_single_peak(combined_df, rolling_window = 50):
         #print('widths', widths)
 
         #fig, ax = plt.subplots(figsize=(10, 5))
-        #ax.plot(t_signal, signal)
+        #ax.plot(t_signal,1-np.array(combined_df.iloc[signal_index]['raw_signal'],dtype=float))
         popt_array = []
         times_array = np.array([])
         signal_array = np.nan*np.ones(np.size(t_signal))
@@ -94,12 +94,14 @@ def process_single_peak(combined_df, rolling_window = 50):
         t_signal_rise = 0
         t_signal_fall = 0
         dt_signal = 0
-
-        if peaks[0]+widths[0][0]*2 - (peaks[-1]-widths[0][-1]*2) > 0:
+        left_baseline = 0
+        signal_type = ''
+        if peaks[0]+widths[0][0]*1 - (peaks[-1]-widths[0][-1]*1) > 0:
             p0=[np.max(signal), np.min(signal[0]), t_signal[peaks[0]], widths[0][0]/2, 1]
             bounds=([p0[0]-abs(p0[0]/2), p0[1]-np.abs(p0[1])/2,p0[2]-widths[0][0]/2, p0[3]/10,0.05], [p0[0]+abs(p0[0]), p0[1]+np.abs(p0[1]), p0[2]+widths[0][0]/2, p0[3]*2,2])
             try:
                 popt, pcov = curve_fit(gaussian_function, t_signal, signal, p0=p0,bounds=bounds,maxfev=10000)
+                #popt, pcov = curve_fit(gaussian_function, t_signal, 1-np.array(combined_df.iloc[signal_index]['raw_signal'],dtype=float), p0=p0,bounds=bounds,maxfev=10000)
                 dt_signal = popt[3]
             except Exception as e:
                 print(f"Error fitting gaussian function: {e}")
@@ -112,6 +114,7 @@ def process_single_peak(combined_df, rolling_window = 50):
             #ax.plot(t_signal, gaussian_function(t_signal, *popt), color='green')
             popt_array.append(popt)
             signal_array = gaussian_function(t_signal, *popt)
+            signal_type = 'gaussian'
         else:
             for ii in range(len(peaks)):
                 window_width = np.int16(widths[0][ii]*2)
@@ -121,6 +124,7 @@ def process_single_peak(combined_df, rolling_window = 50):
                 #print('window_start', window_start)
                 #print('window_end', window_end)
                 window_signal = signal[window_start:window_end]
+                #window_signal = 1-np.array(combined_df.iloc[signal_index]['raw_signal'],dtype=float)[window_start:window_end]
                 window_time = t_signal[window_start:window_end]
                 #times_array.append([window_start, window_end])
                 times_array = np.append(times_array, window_time)
@@ -174,12 +178,36 @@ def process_single_peak(combined_df, rolling_window = 50):
                     if ii == len(peaks)-1:
                         signal_array[window_end:] = right_sigmoid_function(t_signal[window_end:], *popt)
                         t_signal_fall = popt[2]
-        if t_signal_rise > 0 and t_signal_fall > 0:
-            dt_signal = t_signal_fall - t_signal_rise
+            signal_type = 'sigmoid'
+        if signal_type == 'sigmoid':
+            #print('t_signal_rise', t_signal_rise)
+            #print('t_signal_fall', t_signal_fall)
+            dt_signal = abs(t_signal_fall - t_signal_rise)
+        else:
+            dt_signal = popt[-2]
+            #print('dt_signal', dt_signal)
+    
         mask = np.isnan(signal_array)       
         result_array = CubicSpline(t_signal[~mask], signal_array[~mask])
+        
         norm_factor = np.mean(np.array(combined_df.iloc[signal_index]['raw_signal_not_norm'])/np.array(combined_df.iloc[signal_index]['raw_signal']))
-        results.append({'result_array': result_array(t_signal),'t_signal': t_signal, 'dt_signal': dt_signal, 't_start': combined_df.iloc[signal_index]['t_start'], 't_end': combined_df.iloc[signal_index]['t_end'],'dt': combined_df.iloc[signal_index]['dt'], 'norm_factor': norm_factor, 'popt_array': popt_array, 'times_array': times_array, 'signal_array': signal, 'raw_signal_not_norm': combined_df.iloc[signal_index]['raw_signal_not_norm']})
+        #ax.plot(t_signal, result_array(t_signal)-np.min(result_array(t_signal)), color='red')
+        #ax.set_xlim(-dt_signal*5, dt_signal*5)
+        #plt.show()
+        results.append({
+            'result_array': result_array(t_signal)-np.min(result_array(t_signal)),
+            't_signal': t_signal, 
+            'dt_signal': dt_signal, 
+            't_start': combined_df.iloc[signal_index]['t_start'], 
+            't_end': combined_df.iloc[signal_index]['t_end'],
+            'dt': combined_df.iloc[signal_index]['dt'], 
+            'norm_factor': norm_factor, 
+            'popt_array': popt_array, 
+            'times_array': times_array, 
+            'signal_array': signal, 
+            'raw_signal_not_norm': combined_df.iloc[signal_index]['raw_signal_not_norm'],
+            'signal_type': signal_type,
+            'signal_type_index': signal_index})
 
     return results
 
@@ -191,10 +219,10 @@ def __main__():
     with open(os.path.join(base_dir, 'combined_peaks_data.json'), 'r') as f:
         peaks_data = json.load(f)
     combined_df = pd.DataFrame(peaks_data)
-    result_array, t_signal, popt_array, times_array = process_single_peak(combined_df)
-    print(result_array(t_signal))
-    print(popt_array)
-    print(times_array)
+    results = process_single_peak(combined_df,rolling_window=50)
+    #print(result_array(t_signal))
+    #print(popt_array)
+    #print(times_array)
 
 if __name__ == '__main__':
     __main__()
