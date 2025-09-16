@@ -581,7 +581,7 @@ def analyze_statistics(area_data, fwhm_data, max_disp_data, signal_type):
     plt.close()
 
 def main():
-    base_dir = '/media/alextusnin/Nanopore/DATA'  # Adjust this path to your base directory
+    base_dir = '/Users/hugo/MOLECL/Molecl_data_H'  # Adjust this path to your base directory
     area_data, fwhm_data, max_disp_data = gather_statistics(base_dir)
     for stype in ['all', 'gaussian', 'sigmoid']:
         print(f"Processing signal_type: {stype}")

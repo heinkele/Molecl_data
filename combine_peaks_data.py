@@ -63,7 +63,7 @@ def combine_peaks_data(root_path):
         else:
             print("No peaks_data.json files found!")
 def __main__():
-    root_path = '/media/alextusnin/Nanopore/DATA/plasmid/'
+    root_path = '/Users/hugo/MOLECL/Molecl_data_H'
     combine_peaks_data(root_path)
 
 if __name__ == '__main__':

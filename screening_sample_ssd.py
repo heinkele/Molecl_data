@@ -78,18 +78,12 @@ def find_sudden_changes(signal, threshold=0.1, min_segment_length=1000):
 
 # Add this function before the main processing loop
 def get_data_folders(root_path):
-    """
-    Find all relevant data folders in the given root path.
-    Excludes folders containing 'baseline' in their name.
-    """
     folders = []
     for item in os.listdir(root_path):
+        if item.startswith('.') or item == '__pycache__':
+            continue  # ignore les dossiers cachés
         full_path = os.path.join(root_path, item)
-        #if os.path.isdir(full_path) and '3MLiCl' in item and 'baseline' not in item:
-        #if os.path.isdir(full_path) and '100pM' in item and 'baseline' not in item:
-        #if os.path.isdir(full_path) and '2023' in item and 'baseline' not in item:
-        #if os.path.isdir(full_path) and '500bp' in item and 'baseline' not in item:
-        if os.path.isdir(full_path) and 'baseline' not in item :
+        if os.path.isdir(full_path) and 'baseline' not in item:
             folders.append(full_path)
     return sorted(folders)
 
@@ -299,7 +293,7 @@ def process_data(root_path):
             
         
 def __main__():
-    root_path = '/media/alextusnin/Nanopore/DATA/plasmid/'
+    root_path = '/Users/hugo/MOLECL/Molecl_data_H'
     process_data(root_path)
     
 if __name__ == '__main__':
