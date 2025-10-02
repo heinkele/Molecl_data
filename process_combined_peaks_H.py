@@ -103,6 +103,13 @@ def process_combined_peaks(root_path):
                 integral = np.trapz(fitted_signals-np.min(fitted_signals), t_signal)*norm_factor
                 max_displacement = np.max(fitted_signals-np.min(fitted_signals))*norm_factor
 
+                fitted_for_plot = (fitted_signals - np.min(fitted_signals)) * norm_factor
+                t = np.asarray(t_signal, dtype=float)
+                raw = np.asarray(raw_signal_not_norm, dtype=float)
+                filt = np.asarray(filtered_signal, dtype=float) * norm_factor
+                n = min(len(t), len(raw), len(filt), len(fitted_for_plot))
+                t, raw, filt, fitted_for_plot = t[:n], raw[:n], filt[:n], fitted_for_plot[:n]
+
                 #print(integral, max_displacement)
                 fit_results.append({
                     'source_file': base_dir,
@@ -111,7 +118,13 @@ def process_combined_peaks(root_path):
                     'area': integral,
                     'max_displacement': max_displacement,
                     'fwhm': dt_signal,
-                    'signal_type': signal_type
+                    'signal_type': signal_type,
+                    'trace': {
+                        't': t.tolist(),
+                        'raw': raw.tolist(),
+                        'filtered': filt.tolist(),
+                        'fitted': fitted_for_plot.tolist()
+                    }
                 })
                 fig, ax = plt.subplots(figsize=(10, 6))
                 ax.plot(t_signal, raw_signal_not_norm, 'k-', label='Raw Data')
