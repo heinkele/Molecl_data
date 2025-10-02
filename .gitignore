@@ -17,6 +17,8 @@ tmp/
 *.parquet
 *.npy
 *.npz
+*.json
+*.png
 
 # Your existing noisy folders (examples from earlier)
 109_*/
