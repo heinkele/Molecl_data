@@ -1,0 +1,24 @@
+# macOS + Python
+.DS_Store
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+*.swp
+
+# Data & outputs (ignored)
+data/
+datasets/
+outputs/
+results/
+logs/
+tmp/
+*.csv
+*.tsv
+*.parquet
+*.npy
+*.npz
+
+# Your existing noisy folders (examples from earlier)
+109_*/
+*_CONFIRMED*/
+*_test*/
