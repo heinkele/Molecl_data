@@ -20,7 +20,7 @@ pip install notebook
 ## Data Organization
 All samples must be located in the same parent folder, for example:
 /Users/hugo/MOLECL_test/Molecl_data_H/
-├—— processing_status.json
+├── processing_status.json
 ├── Sample_01/
 │   ├── peaks_data.json
 │   ├── peak_fits/
@@ -32,7 +32,7 @@ All samples must be located in the same parent folder, for example:
 └── Sample_03/
     └── ...
 
-In every script, update the ROOT variable to point to your main data folder:
+## In every script, update the ROOT variable to point to your main data folder:
 ROOT = "/Users/hugo/MOLECL_test/Molecl_data_H"
 
 ## Pipeline Execution Order
