@@ -293,7 +293,7 @@ def process_data(root_path):
             
         
 def __main__():
-    root_path = '/Users/hugo/MOLECL/Molecl_data_H'
+    root_path = '/Users/hugo/MOLECL_test/Molecl_data_H'
     process_data(root_path)
     
 if __name__ == '__main__':

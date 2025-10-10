@@ -49,7 +49,7 @@ def combine_peaks_data(root_path):
             print(f"No peaks_data.json files found under: {base_dir}\n")
 
 def __main__():
-    root_path = '/Users/hugo/MOLECL/Molecl_data_H'
+    root_path = '/Users/hugo/MOLECL_test/Molecl_data_H'
     combine_peaks_data(root_path)
 
 if __name__ == '__main__':

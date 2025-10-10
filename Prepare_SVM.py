@@ -3,7 +3,7 @@ import re
 import pandas as pd
 import numpy as np
 
-ROOT = Path("/Users/hugo/MOLECL/Molecl_data_H")
+ROOT = Path("/Users/hugo/MOLECL_test/Molecl_data_H")
 
 # If your sample folder names always contain "...sample<digit>...", this regex will extract it.
 SAMPLE_REGEX = re.compile(r"sample\s*([0-9]+)", re.IGNORECASE)

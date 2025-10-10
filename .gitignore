@@ -19,6 +19,8 @@ tmp/
 *.npz
 *.json
 *.png
+*.txt
+*.joblib
 
 # Your existing noisy folders (examples from earlier)
 109_*/

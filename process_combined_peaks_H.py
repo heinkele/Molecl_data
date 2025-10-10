@@ -358,7 +358,7 @@ def process_combined_peaks(root_path):
 
 
 def __main__():
-    base_dir = '/Users/hugo/MOLECL/Molecl_data_H'
+    base_dir = '/Users/hugo/MOLECL_test/Molecl_data_H'
     #data_folders = get_data_folders(base_dir)
     #print(data_folders)
     process_combined_peaks(base_dir)

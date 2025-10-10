@@ -12,7 +12,7 @@ What it does:
 """
 
 # ===================== CONFIG =====================
-ROOT = "/Users/hugo/MOLECL/Molecl_data_H"
+ROOT = "/Users/hugo/MOLECL_test/Molecl_data_H"
 
 # Detector (signature → two edge peaks)
 ROLL_WIN         = 31
