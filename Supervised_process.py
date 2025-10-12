@@ -367,7 +367,8 @@ def __main__():
 
     # 8) Evaluate on test
     y_pred = best_pipe.predict(X_test)
-    # Feature importance plot (like your screenshot)
+
+    # Feature importance plot
     plot_title = "A – Top 10 feature importances (RBF SVM)"
     plot_path  = PLOTS_DIR / "A_feature_importance_top10.png"
     plot_perm_importance(best_pipe, X_test, y_test, X_train.columns, plot_title, plot_path, seed=SEED)
@@ -375,23 +376,33 @@ def __main__():
     print("\n[Test] Classification report:\n", classification_report(y_test, y_pred, digits=3))
     bal = balanced_accuracy_score(y_test, y_pred)
     f1m = f1_score(y_test, y_pred, average="macro")
-    print(f"Balanced acc: {bal:.3f} | Macro‑F1: {f1m:.3f}")
+    print(f"Balanced acc: {bal:.3f} | Macro-F1: {f1m:.3f}")
 
-    # Confusion matrix plot
-    cm = confusion_matrix(y_test, y_pred, labels=np.unique(y_train))
+    # Normalized confusion matrix (per-row → confidence 0..1)
+    labels = np.unique(y_train)
+    cm = confusion_matrix(y_test, y_pred, labels=labels, normalize="true")
+
     plt.figure(figsize=(5,4))
-    plt.imshow(cm, cmap="Blues")
-    plt.title("Confusion Matrix (Test)")
+    im = plt.imshow(cm, cmap="Blues", vmin=0, vmax=1)
+    plt.title(f"Confusion Matrix (Test) • Macro-F1={f1m:.3f}")
     plt.xlabel("Predicted"); plt.ylabel("True")
-    ticks = np.arange(len(np.unique(y_train)))
-    labs = list(np.unique(y_train))
-    plt.xticks(ticks, labs, rotation=45)
-    plt.yticks(ticks, labs)
+
+    ticks = np.arange(len(labels))
+    plt.xticks(ticks, labels, rotation=45)
+    plt.yticks(ticks, labels)
+
+    # Annotate each cell with value in [0,1]
     for i in range(cm.shape[0]):
         for j in range(cm.shape[1]):
-            plt.text(j, i, str(cm[i, j]), ha="center", va="center", fontsize=8)
-    plt.colorbar(fraction=0.046, pad=0.04)
-    plt.tight_layout(); plt.savefig(PLOTS_DIR/"confusion_matrix_test.png"); plt.close()
+            plt.text(j, i, f"{cm[i, j]:.2f}", ha="center", va="center", fontsize=8,
+                     color=("white" if cm[i, j] > 0.5 else "black"))
+
+    cbar = plt.colorbar(im, fraction=0.046, pad=0.04)
+    cbar.set_label("Per-class confidence (row-normalized)")
+
+    plt.tight_layout()
+    plt.savefig(PLOTS_DIR / "confusion_matrix_test.png")
+    plt.close()
 
     # 9) CV stability of chosen model
     cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=SEED)

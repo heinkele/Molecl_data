@@ -589,22 +589,36 @@ def run_svm(DATASETS: Path):
         f1m = f1_score(y_test, y_pred, average="macro")
         f1w = f1_score(y_test, y_pred, average="weighted")
 
-        # Confusion matrix
+                # Normalized confusion matrix (row-normalized -> per-class confidence 0..1)
         labels = np.unique(np.concatenate([y_train, y_test]))
-        cm = confusion_matrix(y_test, y_pred, labels=labels)
-        fig = plt.figure(figsize=(5.5, 4.5))
-        im = plt.imshow(cm, cmap="Blues")
-        plt.title(f"{ds} – Confusion Matrix")
+        cm = confusion_matrix(y_test, y_pred, labels=labels, normalize="true")
+
+        fig = plt.figure(figsize=(5.8, 4.6))
+        im = plt.imshow(cm, cmap="Blues", vmin=0, vmax=1)
+        plt.title(f"{ds} – Confusion Matrix (row-normalized) • Macro-F1={f1m:.3f}")
         plt.xlabel("Predicted"); plt.ylabel("True")
+
         plt.xticks(range(len(labels)), labels, rotation=0)
         plt.yticks(range(len(labels)), labels)
+
+        # Annotate cells with values in [0,1]
         for i in range(cm.shape[0]):
             for j in range(cm.shape[1]):
-                plt.text(j, i, str(cm[i, j]), ha="center", va="center", fontsize=9)
-        plt.colorbar(im, fraction=0.046, pad=0.04)
+                val = cm[i, j]
+                plt.text(
+                    j, i, f"{val:.2f}",
+                    ha="center", va="center",
+                    fontsize=9,
+                    color=("white" if val > 0.5 else "black")
+                )
+
+        cbar = plt.colorbar(im, fraction=0.046, pad=0.04)
+        cbar.set_label("Per-class confidence (row sum = 1)")
+
         plt.tight_layout()
         cm_path = PLOTS / f"{ds}_confusion_matrix.png"
-        plt.savefig(cm_path); plt.close(fig)
+        plt.savefig(cm_path)
+        plt.close(fig)
 
         report = classification_report(y_test, y_pred, labels=labels, zero_division=0)
         with open(OUT / f"{ds}_classification_report.txt", "w", encoding="utf-8") as f:
