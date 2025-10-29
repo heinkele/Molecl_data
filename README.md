@@ -49,10 +49,10 @@ ROOT = "/Users/hugo/MOLECL_test/Molecl_data_H"
 ## Pipeline Execution Order
 You must execute the scripts in the following order:
 
-• screening_sample_ssd.py → Identify and screen valid data folders.
+• screening_sample.py → Identify and screen valid data folders.
 • combine_peaks_data_H.py → Merge peaks_data.json files from all samples.
-• process_combined_peaks_H.py → Extract and process features from the combined peaks.
-• All_features.py → Aggregate all processed features into one master dataset.
+• process_combined_peaks.py → Extract and process features from the combined peaks.
+• Extract_Features.py → Aggregate all processed features into one master dataset.
 • Prepare_SVM.py → Aggregate all experiments into one single csv for the models
 • Supervised_process.py → Train SVM and evaluate classification.
 • (optional) Unsupervised_process.py → Perform clustering, PCA, ICA, etc.
