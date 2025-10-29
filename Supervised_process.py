@@ -18,7 +18,7 @@ from sklearn.inspection import permutation_importance
 
 # ------------------- CONFIG -------------------
 SEED = 42
-ROOT = Path("/Users/hugo/MOLECL_test/Molecl_data_H")
+ROOT = Path("/Users/hugo/New data/PacBio")
 FEATURE_CSV_NAME = "event_features_with_deltas.csv"  # per-sample file
 ALL_EVENTS = ROOT / "all_events_labeled.csv"         # concatenated file
 OUT_DIR = ROOT / "Supervised" / "ModelSelection"

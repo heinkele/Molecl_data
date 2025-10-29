@@ -7,10 +7,10 @@ from scipy.interpolate import interp1d
 import pdb
 import json
 
-from screening_sample_ssd import get_data_folders
-from process_single_peak import process_single_peak
-from screening_sample_ssd import is_file_processed
-from screening_sample_ssd import mark_file_as_processed
+from screening_sample_ssd_old import get_data_folders
+from process_single_peak_old import process_single_peak
+from screening_sample_ssd_old import is_file_processed
+from screening_sample_ssd_old import mark_file_as_processed
 
 
 # Helper function to safely convert string to array
@@ -358,7 +358,7 @@ def process_combined_peaks(root_path):
 
 
 def __main__():
-    base_dir = '/Users/hugo/MOLECL_test/Molecl_data_H'
+    base_dir = '/Users/hugo/New data/PacBio'
     #data_folders = get_data_folders(base_dir)
     #print(data_folders)
     process_combined_peaks(base_dir)
