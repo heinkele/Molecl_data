@@ -34,6 +34,10 @@ FEATURES_KEEP = [
     "delta_mae_filtered_raw", "delta_mae_fit_raw",
     "kurtosis_excess_raw_resid", "duration_s", "auc_abs",
     "delta_area_filtered_raw", "skewness_raw_resid", "delta_area_fit_raw",
+    "noise_delta_area_filtered_raw",
+    "noise_delta_mae_filtered_raw",
+    "noise_delta_area_fit_raw",
+    "noise_delta_mae_fit_raw",
 ]
 
 # ------------------- HELPERS -------------------

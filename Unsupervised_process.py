@@ -21,7 +21,7 @@ from joblib import dump
 
 # -------------------- CONFIG --------------------
 SEED = 42
-ROOT = Path("/Users/hugo/MOLECL_test/Molecl_data_H")
+ROOT = Path("/Users/hugo/New data/PacBio")
 FEATURE_CSV_NAME = "event_features_with_deltas.csv"
 ALL_EVENTS = ROOT / "all_events_labeled.csv"
 OUT_DIR = ROOT / "Unsupervised"
@@ -36,6 +36,10 @@ FEATURES_KEEP = [
     "delta_mae_filtered_raw", "delta_mae_fit_raw",
     "kurtosis_excess_raw_resid", "duration_s", "auc_abs",
     "delta_area_filtered_raw", "skewness_raw_resid", "delta_area_fit_raw",
+    "noise_delta_area_filtered_raw",
+    "noise_delta_mae_filtered_raw",
+    "noise_delta_area_fit_raw",
+    "noise_delta_mae_fit_raw",
 ]
 
 # PCA/ICA/GMM parameters
